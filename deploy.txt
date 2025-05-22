@@ -1,0 +1,16 @@
+# Permissions: Create a service account
+PROJECT_ID=themismd
+PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format="value(projectNumber)")
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
+  --role="roles/storage.objectViewer"
+
+
+
+# Build and deploy
+gcloud builds submit --config cloudbuild.yaml
+
+# Or manual deployment
+docker build -t gcr.io/themismd/rag-api .
+docker push gcr.io/themismd/rag-api
+gcloud run deploy rag-api --image gcr.io/themismd/rag-api

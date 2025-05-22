@@ -1,0 +1,6 @@
+fastapi
+uvicorn[standard]
+pydantic
+python-multipart
+chromadb>=0.4.18
+sentence-transformers>=2.2.2
