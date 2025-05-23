@@ -18,7 +18,9 @@ steps:
       - '--cpu=2'
       - '--timeout=900s'
       - '--max-instances=5'
-      - '--set-env-vars=ENVIRONMENT=production'
+      - '--set-env-vars=ENVIRONMENT=production,API_KEY=${_API_KEY}'
 
 substitutions:
   _SERVICE_NAME: rag-api
+  _ENVIRONMENT: production
+  _API_KEY: sk-ant-api03-...

@@ -33,7 +33,7 @@ app.mount(
 
 # Initialize Anthropic client (make sure to set your API key)
 anthropic_client = anthropic.Anthropic(
-    api_key="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"
+    api_key=os.getenv("API_KEY")
 )
 
 # Global variables
