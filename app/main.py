@@ -1,6 +1,7 @@
 # app_manual_embeddings.py
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import json
 import uuid
@@ -12,6 +13,14 @@ import anthropic
 from typing import List, Dict, Any
 
 app = FastAPI(title="RAG API - Manual Embeddings")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["POST", "GET"],
+    allow_headers=["*"],
+)
 
 data_dir_to_serve = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "../data"
