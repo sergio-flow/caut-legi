@@ -14,9 +14,10 @@ steps:
       - '--platform=managed'
       - '--region=us-central1'
       - '--allow-unauthenticated'
-      - '--memory=2Gi'
-      - '--cpu=1'
-      - '--max-instances=10'
+      - '--memory=4Gi'
+      - '--cpu=2'
+      - '--timeout=900s'
+      - '--max-instances=5'
       - '--set-env-vars=ENVIRONMENT=production'
 
 substitutions:
