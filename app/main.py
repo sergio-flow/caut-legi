@@ -1,5 +1,6 @@
 # app_manual_embeddings.py
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import json
 import uuid
@@ -11,6 +12,15 @@ import anthropic
 from typing import List, Dict, Any
 
 app = FastAPI(title="RAG API - Manual Embeddings")
+
+data_dir_to_serve = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "../data"
+)
+app.mount(
+    "/data",
+    StaticFiles(directory=data_dir_to_serve),
+    name="data",
+)
 
 # Initialize Anthropic client (make sure to set your API key)
 anthropic_client = anthropic.Anthropic(
@@ -51,7 +61,7 @@ def initialize_chroma():
 
         # Load constitution data
         data_files = [
-            ("constitutia.json", "moldova_constitution"),
+            # ("constitutia.json", "moldova_constitution"),
             ("data/constitutia.json", "moldova_constitution"),
         ]
 
@@ -224,45 +234,45 @@ async def analyze_with_claude(document: str, query: str) -> tuple[str, str]:
     """
 
     # First call: Get relevant sentences
-    first_prompt = f"""Document:
-{document}
+#     first_prompt = f"""Document:
+# {document}
 
-User's query: {query}
+# User's query: {query}
 
-Please analyze the document and identify the most relevant laws/sentences that relate to the user's query. Return only a comma-separated list of the exact sentences from the document that are most relevant. Do not add any explanations or additional text - just the sentences separated by commas."""
+# Please analyze the document and identify the most relevant laws/sentences that relate to the user's query. Return only a comma-separated list of the exact sentences from the document that are most relevant. Do not add any explanations or additional text - just the sentences separated by commas."""
 
-    try:
-        first_response = anthropic_client.messages.create(
-            model="claude-3-5-haiku-20241022",
-            max_tokens=1000,
-            messages=[{"role": "user", "content": first_prompt}],
-        )
-        highlighted_sentences = first_response.content[0].text.strip()
-    except Exception as e:
-        highlighted_sentences = f"Error in first AI call: {str(e)}"
+#     try:
+#         first_response = anthropic_client.messages.create(
+#             model="claude-3-5-haiku-20241022",
+#             max_tokens=1000,
+#             messages=[{"role": "user", "content": first_prompt}],
+#         )
+#         highlighted_sentences = first_response.content[0].text.strip()
+#     except Exception as e:
+#         highlighted_sentences = f"Error in first AI call: {str(e)}"
 
     # Second call: Get explanation in Romanian
-    second_prompt = f"""Document original:
+    prompt = f"""Document original:
 {document}
 
 Întrebarea utilizatorului: {query}
 
-Legile/propoziții relevante identificate:
-{highlighted_sentences}
-
-Te rog să explici în română, în termeni simpli, de ce exact aceste legi sunt relevante pentru întrebarea utilizatorului. Oferă o explicație clară și ușor de înțeles."""
+Te rog să explici în română, în termeni simpli, de ce exact aceste legi sunt relevante pentru întrebarea utilizatorului. Oferă o explicație clară și ușor de înțeles.
+Maxim: 5 propoziții. Maxim: 50 cuvinte. Maxim: 300 caractere. Ofera doar explicația, poate si un exemplu usor de inteles, fără alte detalii.
+Daca nu gasești o explicatie relevanta pe baza ce cauta utilizatorul, atunci nu raspunde la întrebare. Returneaza doar un mesaj gol.
+"""
 
     try:
         second_response = anthropic_client.messages.create(
             model="claude-3-5-haiku-20241022",
             max_tokens=1500,
-            messages=[{"role": "user", "content": second_prompt}],
+            messages=[{"role": "user", "content": prompt}],
         )
         explanation = second_response.content[0].text.strip()
     except Exception as e:
-        explanation = f"Error in second AI call: {str(e)}"
+        explanation = f"Error in AI call: {str(e)}"
 
-    return highlighted_sentences, explanation
+    return explanation
 
 
 @app.get("/query/{collection_name}")
@@ -339,7 +349,7 @@ async def simple_query(collection_name: str, q: str, n_results: int = 3):
         ai_analyses = []
         for i, document in enumerate(filtered_results["documents"]):
             if filtered_results["relevance_scores"][i] >= 80:
-                highlighted_sentences, explanation = await analyze_with_claude(
+                explanation = await analyze_with_claude(
                     document, q
                 )
                 ai_analyses.append(
@@ -347,7 +357,7 @@ async def simple_query(collection_name: str, q: str, n_results: int = 3):
                         "document_index": i,
                         "relevance_score": filtered_results["relevance_scores"][i],
                         "relevance_label": filtered_results["relevance_labels"][i],
-                        "highlighted_sentences": highlighted_sentences,
+                        # "highlighted_sentences": highlighted_sentences,
                         "explanation": explanation,
                     }
                 )
